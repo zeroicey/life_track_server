@@ -154,5 +154,3 @@ MemoGroupRouter.delete(
     return Responder.success(`Group ${group.id} deleted successfully`).build(c);
   }
 );
-
-// Vim

@@ -1,7 +1,8 @@
 {
   "name": "life_track_server",
   "scripts": {
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.33.0",
