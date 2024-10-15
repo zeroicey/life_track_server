@@ -1,5 +1,4 @@
 import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
-import { array } from "zod";
 
 export const Memo = pgTable("memos", {
   id: serial("id").primaryKey(),
@@ -16,6 +15,7 @@ export const Memo = pgTable("memos", {
 export const MemoGroup = pgTable("memo_groups", {
   id: serial("id").primaryKey(),
   name: text("text").notNull().unique(),
+  description: text("text").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
