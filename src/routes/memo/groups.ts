@@ -46,8 +46,8 @@ MemoGroupRouter.get("/groups/:id", validater("param", idSchema), async (c) => {
   return Responder.success().setData(group[0]).build(c);
 });
 
-MemoGroupRouter.post("/groups", validater("query", postSchema), async (c) => {
-  const { name, description } = c.req.valid("query");
+MemoGroupRouter.post("/groups", validater("json", postSchema), async (c) => {
+  const { name, description } = c.req.valid("json");
   await db.insert(MemoGroup).values({ name, description });
   return Responder.success("Group created successfully").build(c);
 });
