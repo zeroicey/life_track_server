@@ -15,7 +15,7 @@ export const Memo = pgTable("memos", {
 export const MemoGroup = pgTable("memo_groups", {
   id: serial("id").primaryKey(),
   name: text("text").notNull().unique(),
-  description: text("text").notNull(),
+  description: text("description").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });

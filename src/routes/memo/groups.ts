@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 
 // TODO: Description update controller
 
-export const MemoGroupRouter = new Hono();
+const MemoGroupRouter = new Hono();
 
 const idSchema = z.object({
   id: z
@@ -86,3 +86,5 @@ MemoGroupRouter.delete(
     return Responder.success(`Group ${group.id} deleted successfully`).build(c);
   }
 );
+
+export default MemoGroupRouter;

@@ -6,7 +6,7 @@ import { db } from "../../db";
 import { Memo, MemoGroup } from "../../db/models/memo";
 import { eq } from "drizzle-orm";
 
-export const MemoRouter = new Hono();
+const MemoRouter = new Hono();
 
 const idSchema = z.object({
   id: z
@@ -94,3 +94,5 @@ MemoRouter.delete("/memos/:id", validater("param", idSchema), async (c) => {
   }
   return Responder.success(`Memo ${memo[0].id} deleted successfully`).build(c);
 });
+
+export default MemoRouter;

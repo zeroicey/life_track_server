@@ -24,7 +24,7 @@ export default class Responder {
   }
 
   static fail(message: string = "Request failure"): Responder {
-    return new Responder(true, message, 400);
+    return new Responder(false, message, 400);
   }
 
   setData(data: object): this {

@@ -8,6 +8,8 @@ services:
       - postgres
     networks:
       - life_track-net
+    volumes:
+      - ./:/app
 
   postgres:
     image: postgres:15-alpine
