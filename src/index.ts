@@ -16,7 +16,7 @@ app.onError((err, c) => {
 });
 
 app.notFound((c) => {
-  return Responder.fail("Not fasdljlkFound").setStatusCode(404).build(c);
+  return Responder.fail("Api Not Found").setStatusCode(404).build(c);
 });
 
 export default {

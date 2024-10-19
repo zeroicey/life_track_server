@@ -3,8 +3,8 @@ import validater from "../../middlewares/validate";
 import { z } from "zod";
 import Responder from "../../middlewares/response";
 import { db } from "../../db";
-import { MemoGroup } from "../../db/models/memo";
-import { eq } from "drizzle-orm";
+import { Memo, MemoGroup } from "../../db/models/memo";
+import { count, desc, eq } from "drizzle-orm";
 
 // TODO: Description update controller
 
@@ -29,7 +29,26 @@ const postSchema = z.object({
 });
 
 MemoGroupRouter.get("/groups", async (c) => {
-  const groups = await db.select().from(MemoGroup);
+  const groups = await db
+    .select({
+      id: MemoGroup.id,
+      name: MemoGroup.name,
+      description: MemoGroup.description,
+      created_at: MemoGroup.created_at,
+      updated_at: MemoGroup.updated_at,
+      memo_number: count(Memo.id).as("memo_number"), // 计算每个 group 的 memo 数量
+    })
+    .from(MemoGroup)
+    .leftJoin(Memo, eq(Memo.group_id, MemoGroup.id))
+    .groupBy(
+      MemoGroup.id,
+      MemoGroup.name,
+      MemoGroup.description,
+      MemoGroup.created_at,
+      MemoGroup.updated_at
+    ) // 所有选择的字段都需要在这里列出
+    .orderBy(desc(MemoGroup.updated_at)); // 按照 updated_at 字段降序排序
+
   return Responder.success().setData(groups).build(c);
 });
 
@@ -48,8 +67,13 @@ MemoGroupRouter.get("/groups/:id", validater("param", idSchema), async (c) => {
 
 MemoGroupRouter.post("/groups", validater("json", postSchema), async (c) => {
   const { name, description } = c.req.valid("json");
-  await db.insert(MemoGroup).values({ name, description });
-  return Responder.success("Group created successfully").build(c);
+  const [group] = await db
+    .insert(MemoGroup)
+    .values({ name, description })
+    .returning();
+  return Responder.success("Group created successfully")
+    .setData(group)
+    .build(c);
 });
 
 MemoGroupRouter.patch(
