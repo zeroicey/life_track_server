@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import Responder from "./middlewares/response";
 import MemoRouter from "./routes/memo/memos";
@@ -6,6 +7,7 @@ import MemoGroupRouter from "./routes/memo/groups";
 
 const app = new Hono().basePath("/api");
 
+app.use(cors());
 app.use(logger());
 
 app.route("/memo", MemoRouter);
