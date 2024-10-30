@@ -21,27 +21,24 @@
 - 分组管理（CRUD）
 - 支持文件附件（最多9个）
 
-### 2. 模块二 (开发中)
+### 2. 任务模块 (开发中)
 - 功能描述待补充
 - ...
 
-### 3. 模块三 (开发中)
+### 3. 文章模块 (开发中)
 - 功能描述待补充
 - ...
 
-### 4. 模块四 (开发中)
+### 4. 习惯模块 (开发中)
 - 功能描述待补充
 - ...
 
-### 5. 模块五 (开发中)
+### 5. 收集模块 (开发中)
 - 功能描述待补充
 - ...
 
-## 项目结构
-
-```
-DATABASE_URL=postgres://admin:admin@life_track-db:5432/life_track
-```
+## 项目运行
+To change the port and database url, you can modify the `.env` file.
 
 To install dependencies:
 ```sh
