@@ -2,97 +2,103 @@ import { Hono } from "hono";
 import validater from "../../middlewares/validate";
 import { z } from "zod";
 import Responder from "../../middlewares/response";
-import { db } from "../../db";
-import { Memo, MemoGroup } from "../../db/models/memo";
-import { eq } from "drizzle-orm";
+import { MemoModel } from "../../models/memo";
+import mongoose from "mongoose";
 
 const MemoRouter = new Hono();
 
 const idSchema = z.object({
-  id: z
-    .string()
-    .transform(Number)
-    .refine((val) => !isNaN(val), {
-      message: "Invalid ID format",
-    }),
+  id: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid ID format",
+  }),
 });
 
-const nameSchema = z.object({
-  name: z.string(),
+const memoSchema = z.object({
+  text: z.string().min(1, "Text is required"),
+  group_id: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
+    message: "Invalid group ID format",
+  }),
+  attach: z.array(z.string()).max(9, "Maximum 9 attachments allowed").default([]),
 });
 
+// 获取所有备忘录
+MemoRouter.get("/memos", async (c) => {
+  const memos = await MemoModel.find();
+  return Responder.success().setData(memos).build(c);
+});
+
+// 获取单个备忘录
 MemoRouter.get("/memos/:id", validater("param", idSchema), async (c) => {
   const { id } = c.req.valid("param");
-  const memo = await db.select().from(Memo).where(eq(Memo.id, id)).limit(1);
-  if (!memo.length) {
+  const memo = await MemoModel.findById(id);
+  if (!memo) {
     return Responder.fail("Memo not found").build(c);
   }
-  return Responder.success().setData(memo[0]).build(c);
+  return Responder.success().setData(memo).build(c);
 });
 
+// 创建备忘录
 MemoRouter.post(
   "/memos",
-  validater(
-    "json",
-    z.object({
-      text: z.string(),
-      group_id: z
-        .string()
-        .transform(Number)
-        .refine((val) => !isNaN(val), {
-          message: "Invalid ID format",
-        }),
-    })
-  ),
+  validater("json", memoSchema),
   async (c) => {
-    const { text, group_id } = c.req.valid("json");
-    const memo = await db.insert(Memo).values({ text, group_id }).returning();
-    return Responder.success("Memo created successfully")
-      .setData(memo)
-      .build(c);
+    const data = c.req.valid("json");
+    try {
+      const memo = await MemoModel.create(data);
+      return Responder.success("Memo created successfully")
+        .setData(memo)
+        .build(c);
+    } catch (error: unknown) {
+      if ((error as any).code === 11000) {
+        return Responder.fail("Duplicate memo entry").build(c);
+      }
+      throw error;
+    }
   }
 );
 
-MemoRouter.patch(
+// 更新备忘录
+MemoRouter.put(
   "/memos/:id",
   validater("param", idSchema),
-  validater(
-    "json",
-    z.object({
-      group_id: z
-        .string()
-        .transform(Number)
-        .refine((val) => !isNaN(val), {
-          message: "Invalid ID format",
-        }),
-      text: z.string(),
-    })
-  ),
+  validater("json", memoSchema),
   async (c) => {
     const { id } = c.req.valid("param");
-    const { group_id, text } = c.req.valid("json");
-    const [memo] = await db
-      .update(Memo)
-      .set({ group_id, text })
-      .where(eq(Memo.id, id))
-      .returning({ id: Memo.id });
-    if (!memo) {
-      return Responder.fail("Memo not found").build(c);
+    const data = c.req.valid("json");
+    
+    try {
+      const memo = await MemoModel.findByIdAndUpdate(
+        id,
+        data,
+        { new: true, runValidators: true }
+      );
+      
+      if (!memo) {
+        return Responder.fail("Memo not found").build(c);
+      }
+      return Responder.success("Memo updated successfully")
+        .setData(memo)
+        .build(c);
+    } catch (error: unknown) {
+      if ((error as any).code === 11000) {
+        return Responder.fail("Duplicate memo entry").build(c);
+      }
+      throw error;
     }
-    return Responder.success(`Memo ${memo.id} updated successfully`).build(c);
   }
 );
 
+// 删除备忘录
 MemoRouter.delete("/memos/:id", validater("param", idSchema), async (c) => {
   const { id } = c.req.valid("param");
-  const memo = await db
-    .delete(Memo)
-    .where(eq(Memo.id, id))
-    .returning({ id: Memo.id });
-  if (!memo.length) {
+  const memo = await MemoModel.findByIdAndDelete(id);
+  
+  if (!memo) {
     return Responder.fail("Memo not found").build(c);
   }
-  return Responder.success(`Memo ${memo[0].id} deleted successfully`).build(c);
+  return Responder.success("Memo deleted successfully")
+    .setData(memo)
+    .build(c);
 });
 
 export default MemoRouter;
