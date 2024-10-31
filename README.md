@@ -37,6 +37,47 @@
 - 功能描述待补充
 - ...
 
+## 环境准备
+
+### 数据库服务启动
+
+1. MongoDB 启动 (Docker)
+```bash
+docker run -d \
+  --name mongo \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=admin \
+  -v mongo-data:/data/db \
+  -p 27017:27017 \
+  mongo:latest
+```
+
+2. PostgreSQL 启动 (Docker)
+```bash
+docker run -d \
+  --name postgres \
+  -e POSTGRES_USER=admin \
+  -e POSTGRES_PASSWORD=admin \
+  -e POSTGRES_DB=life_track \
+  -v pg-data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  postgres:15-alpine
+```
+
+3. 应用服务启动 (Docker)
+```bash
+# 构建镜像
+docker build -t life_track-server .
+
+# 运行容器
+docker run -d \
+  --name life_track-server \
+  -p 3000:3000 \
+  -e MONGO_URL="mongodb://admin:admin@mongo:27017/life_track?authSource=admin" \
+  -e POSTGRES_URL="postgresql://admin:admin@postgres:5432/life_track" \
+  life_track-server
+```
+
 ## 项目运行
 To change the port and database url, you can modify the `.env` file.
 

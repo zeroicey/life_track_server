@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import Responder from "./middlewares/response";
-import MemoRouter from "./routes/memo/memos";
-import MemoGroupRouter from "./routes/memo/groups";
+import MemoRouter from "./routes/memo/memo";
+import MemoGroupRouter from "./routes/memo/group";
 import { connectMongo } from "./db/mongo";
 
 const app = new Hono().basePath("/api");
@@ -21,7 +21,6 @@ app.onError((err, c) => {
 app.notFound((c) => {
   return Responder.fail("Api Not Found").setStatusCode(404).build(c);
 });
-
 // 初始化 MongoDB 连接
 connectMongo().catch(console.error);
 
