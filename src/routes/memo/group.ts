@@ -21,16 +21,27 @@ const groupSchema = z.object({
 // 获取所有分组
 MemoGroupRouter.get("/groups", async (c) => {
   try {
-    const groups = await MemoGroupModel.find().lean();
-    const formattedGroups = groups.map((group) => ({
-      _id: group._id,
-      name: group.name,
-      description: group.description,
-      memo_count: group.memo_count || 0,
-      created_at: group.created_at,
-      updated_at: group.updated_at,
-    }));
-    return Responder.success().setData(formattedGroups).build(c);
+    const groups = await MemoGroupModel.aggregate([
+      {
+        $lookup: {
+          from: "memos",
+          localField: "memos",
+          foreignField: "_id",
+          as: "memos",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          created_at: 1,
+          updated_at: 1,
+          memo_count: { $size: "$memos" },
+        },
+      },
+    ]);
+    return Responder.success().setData(groups).build(c);
   } catch (error) {
     return Responder.fail(
       error instanceof Error ? error.message : "获取失败"
@@ -42,20 +53,34 @@ MemoGroupRouter.get("/groups", async (c) => {
 MemoGroupRouter.get("/groups/:id", validater("param", idSchema), async (c) => {
   const { id } = c.req.valid("param");
   try {
-    const group = await MemoGroupModel.findById(id).lean();
+    const [group] = await MemoGroupModel.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId.createFromHexString(id) },
+      },
+      {
+        $lookup: {
+          from: "memos",
+          localField: "memos",
+          foreignField: "_id",
+          as: "memos",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          created_at: 1,
+          updated_at: 1,
+          memo_count: { $size: "$memos" },
+        },
+      },
+    ]);
+
     if (!group) {
       return Responder.fail("Group not found").build(c);
     }
-    return Responder.success()
-      .setData({
-        _id: group._id,
-        name: group.name,
-        description: group.description,
-        memo_count: group.memo_count || 0,
-        created_at: group.created_at,
-        updated_at: group.updated_at,
-      })
-      .build(c);
+    return Responder.success().setData(group).build(c);
   } catch (error) {
     return Responder.fail(
       error instanceof Error ? error.message : "获取失败"
@@ -70,7 +95,6 @@ MemoGroupRouter.post("/groups", validater("json", groupSchema), async (c) => {
     const now = new Date();
     const group = await MemoGroupModel.create({
       ...data,
-      memo_count: 0,
       created_at: now,
       updated_at: now,
       memos: [],
@@ -125,7 +149,7 @@ MemoGroupRouter.patch(
           _id: group._id,
           name: group.name,
           description: group.description,
-          memo_count: group.memo_count || 0,
+          memo_count: 0,
           created_at: group.created_at,
           updated_at: group.updated_at,
         })
@@ -156,7 +180,7 @@ MemoGroupRouter.delete(
           _id: group._id,
           name: group.name,
           description: group.description,
-          memo_count: group.memo_count || 0,
+          memo_count: 0,
           created_at: group.created_at,
           updated_at: group.updated_at,
         })

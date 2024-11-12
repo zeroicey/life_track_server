@@ -11,11 +11,6 @@ const memoGroupSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  memo_count: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
   created_at: {
     type: Date,
     default: Date.now
@@ -31,11 +26,7 @@ const memoGroupSchema = new mongoose.Schema({
     },
     attach: {
       type: [String],
-      default: [],
-      validate: [
-        (array: string[]) => array.length <= 9,
-        'Attach array cannot contain more than 9 items'
-      ]
+      default: []
     },
     created_at: { 
       type: Date, 
@@ -48,10 +39,9 @@ const memoGroupSchema = new mongoose.Schema({
   }]
 });
 
-// 更新 memo_count 的中间件
+// 更新时间的中间件
 memoGroupSchema.pre('save', function(next) {
   if (this.isModified('memos')) {
-    this.memo_count = this.memos.length;
     this.updated_at = new Date();
   }
   next();
@@ -89,7 +79,6 @@ export interface IMemoGroup {
   _id: string;
   name: string;
   description: string;
-  memo_count: number;
   created_at: Date;
   updated_at: Date;
   memos: IMemo[];
