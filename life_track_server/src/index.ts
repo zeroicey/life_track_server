@@ -3,11 +3,15 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import Responder from "./middlewares/response";
 import { connectMongo } from "./db/mongo";
+import memoRouter from "./routes/memo";
 
 const app = new Hono().basePath("/api");
 
 app.use(cors());
 app.use(logger());
+
+// Add memo routes
+app.route("/memo", memoRouter);
 
 app.onError((err, c) => {
   return Responder.fail(err?.message).build(c);
