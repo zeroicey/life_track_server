@@ -7,14 +7,18 @@ export interface IMemo {
 
 export class MemoService {
   private static extractTags(text: string): string[] {
-    const regex = /#\w+\s/g;
-    const matches = text.match(regex) || [];
-    return Array.from(new Set(matches.map((tag) => tag.trim().slice(1))));
+    // 使用 Unicode 属性匹配所有语言的文字、数字和下划线
+    // \p{L} 匹配任何语言的字母
+    // \p{N} 匹配任何数字
+    // \p{M} 匹配组合记号（例如声调符号）
+    const regex = /#([\p{L}\p{N}\p{M}_]+)/gu;
+    const matches = text.matchAll(regex);
+    return Array.from(new Set(Array.from(matches, (m) => m[1])));
   }
 
   static async createMemo(data: IMemo) {
     const tags = this.extractTags(data.text);
-    
+
     const memo = new MemoModel({
       text: data.text,
       tags,
@@ -43,7 +47,7 @@ export class MemoService {
     }
 
     const tags = this.extractTags(data.text);
-    
+
     const memo = await MemoModel.findByIdAndUpdate(
       id,
       { text: data.text, tags },
