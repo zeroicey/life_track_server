@@ -58,4 +58,34 @@ memoRouter.get("/tags/:tag", async (c) => {
     .build(c);
 });
 
+// Get all tags
+memoRouter.get("/tags", async (c) => {
+  const tags = await MemoService.getAllTags();
+  return Responder.success("Tags retrieved successfully")
+    .setData(tags)
+    .build(c);
+});
+
+// Get memos by date range
+memoRouter.get("/memos/date-range", async (c) => {
+  const { startDate, endDate } = c.req.query();
+  
+  if (!startDate || !endDate) {
+    return Responder.fail("Start date and end date are required")
+      .setStatusCode(400)
+      .build(c);
+  }
+  
+  try {
+    const memos = await MemoService.getMemosByDateRange(startDate, endDate);
+    return Responder.success("Memos retrieved successfully")
+      .setData(memos)
+      .build(c);
+  } catch (error) {
+    return Responder.fail("Invalid date format")
+      .setStatusCode(400)
+      .build(c);
+  }
+});
+
 export default memoRouter;

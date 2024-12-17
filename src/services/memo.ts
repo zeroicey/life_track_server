@@ -73,4 +73,25 @@ export class MemoService {
   static async getMemosByTag(tag: string) {
     return await MemoModel.find({ tags: tag }).sort({ create_time: -1 });
   }
+
+  static async getAllTags() {
+    // 使用 MongoDB 的 distinct 命令获取所有唯一的标签
+    const tags = await MemoModel.distinct('tags');
+    return tags.sort(); // 按字母顺序排序返回
+  }
+
+  static async getMemosByDateRange(startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // 确保结束日期是当天的最后一刻
+    end.setHours(23, 59, 59, 999);
+    
+    return await MemoModel.find({
+      create_time: {
+        $gte: start,
+        $lte: end
+      }
+    }).sort({ create_time: -1 });
+  }
 }
